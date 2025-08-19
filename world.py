@@ -86,6 +86,7 @@ class World:
             self.show_info = not self.show_info
             self.logger.info(f"Info display toggled: {self.show_info}")
             log_world_event("TOGGLE_INFO", f"Info display: {self.show_info}")
+        # 視界表示切り替え (V)
         elif event.key == pygame.K_v:
             self.show_vision = not self.show_vision
             self.logger.info(f"Vision display toggled: {self.show_vision}")
@@ -117,12 +118,12 @@ class World:
             self.cohesion_weight += 0.1
             self.logger.info(f"Cohesion weight increased to {self.cohesion_weight:.1f}")
             log_world_event("PARAMETER_CHANGE", f"Cohesion weight: {self.cohesion_weight:.1f}")
-        # ランダムパラメータ (C/V)
+        # ランダムパラメータ (C/B)
         elif event.key == pygame.K_c:
             self.random_weight = max(0, self.random_weight - 0.05)
             self.logger.info(f"Random weight decreased to {self.random_weight:.2f}")
             log_world_event("PARAMETER_CHANGE", f"Random weight: {self.random_weight:.2f}")
-        elif event.key == pygame.K_v:
+        elif event.key == pygame.K_b:
             self.random_weight += 0.05
             self.logger.info(f"Random weight increased to {self.random_weight:.2f}")
             log_world_event("PARAMETER_CHANGE", f"Random weight: {self.random_weight:.2f}")
@@ -177,7 +178,7 @@ class World:
             f"Separation: {self.separation_weight:.1f} (Q/W)",
             f"Alignment: {self.alignment_weight:.1f} (A/S)",
             f"Cohesion: {self.cohesion_weight:.1f} (Z/X)",
-            f"Random: {self.random_weight:.2f} (C/V)",
+            f"Random: {self.random_weight:.2f} (C/B)",
             f"Inertia: {self.inertia_weight:.1f} (D/F)",
             "",
             "Controls:",

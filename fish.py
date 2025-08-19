@@ -51,19 +51,27 @@ class Fish:
             self._normalize_direction()
             log_fish_behavior(self.id, "RANDOM_DIRECTION", f"Set random direction to ({self.dx:.2f}, {self.dy:.2f})")
         
-        # 前方
-        front_x = int(self.x + self.dx * VISION_RANGE)
-        front_y = int(self.y + self.dy * VISION_RANGE)
+        # 方向ベクトルを正規化
+        length = math.sqrt(self.dx**2 + self.dy**2)
+        if length > 0:
+            dx_norm = self.dx / length
+            dy_norm = self.dy / length
+        else:
+            dx_norm, dy_norm = 0, 0
+        
+        # 前方（進行方向）
+        front_x = int(self.x + dx_norm * VISION_RANGE)
+        front_y = int(self.y + dy_norm * VISION_RANGE)
         vision_coords.append((front_x, front_y))
         
-        # 斜め前（左）
-        left_x = int(self.x + (self.dx - self.dy) * VISION_RANGE)
-        left_y = int(self.y + (self.dy + self.dx) * VISION_RANGE)
+        # 斜め前（左）- 90度回転してから前方
+        left_x = int(self.x + (-dy_norm) * VISION_RANGE * 0.5 + dx_norm * VISION_RANGE)
+        left_y = int(self.y + dx_norm * VISION_RANGE * 0.5 + dy_norm * VISION_RANGE)
         vision_coords.append((left_x, left_y))
         
-        # 斜め前（右）
-        right_x = int(self.x + (self.dx + self.dy) * VISION_RANGE)
-        right_y = int(self.y + (self.dy - self.dx) * VISION_RANGE)
+        # 斜め前（右）- -90度回転してから前方
+        right_x = int(self.x + dy_norm * VISION_RANGE * 0.5 + dx_norm * VISION_RANGE)
+        right_y = int(self.y + (-dx_norm) * VISION_RANGE * 0.5 + dy_norm * VISION_RANGE)
         vision_coords.append((right_x, right_y))
         
         log_fish_behavior(self.id, "VISION_AREA", f"Vision coords: {vision_coords}")
