@@ -1,5 +1,8 @@
 import pygame
+import logging
+import time
 from constants import *
+from utils import log_world_event, log_performance
 
 class World:
     def __init__(self, width=SCREEN_WIDTH, height=SCREEN_HEIGHT):
@@ -9,6 +12,8 @@ class World:
         self.clock = None
         self.font = None
         self.background_color = BLACK
+        self.world_id = id(self)  # 世界のユニークID
+        self.logger = logging.getLogger('FishSimulator.World')
         
         # パラメータ調整用
         self.separation_weight = SEPARATION_WEIGHT
@@ -20,65 +25,134 @@ class World:
         # UI表示用
         self.show_info = True
         self.show_vision = False
+        
+        # 統計情報
+        self.frame_count = 0
+        self.start_time = None
+        
+        self.logger.info(f"World {self.world_id} created with size {width}x{height}")
     
     def initialize(self):
         """pygameを初期化"""
-        pygame.init()
-        self.screen = pygame.display.set_mode((self.width, self.height))
-        pygame.display.set_caption("Fish School Simulator")
-        self.clock = pygame.time.Clock()
-        self.font = pygame.font.Font(None, 24)
+        start_time = time.time()
+        
+        try:
+            pygame.init()
+            self.screen = pygame.display.set_mode((self.width, self.height))
+            pygame.display.set_caption("Fish School Simulator")
+            self.clock = pygame.time.Clock()
+            self.font = pygame.font.Font(None, 24)
+            
+            duration = time.time() - start_time
+            log_performance("Pygame initialization", duration)
+            self.logger.info(f"Pygame initialized successfully in {duration:.4f}s")
+            
+            self.start_time = time.time()
+            log_world_event("INITIALIZED", f"Screen size: {self.width}x{self.height}")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to initialize pygame: {e}")
+            raise
     
     def handle_events(self):
         """イベントを処理"""
+        start_time = time.time()
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                self.logger.info("Quit event received")
+                log_world_event("QUIT", "Window close requested")
                 return False
             
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    return False
-                elif event.key == pygame.K_i:
-                    self.show_info = not self.show_info
-                elif event.key == pygame.K_v:
-                    self.show_vision = not self.show_vision
-                elif event.key == pygame.K_1:
-                    self.separation_weight = max(0, self.separation_weight - 0.1)
-                elif event.key == pygame.K_2:
-                    self.separation_weight += 0.1
-                elif event.key == pygame.K_3:
-                    self.alignment_weight = max(0, self.alignment_weight - 0.1)
-                elif event.key == pygame.K_4:
-                    self.alignment_weight += 0.1
-                elif event.key == pygame.K_5:
-                    self.cohesion_weight = max(0, self.cohesion_weight - 0.1)
-                elif event.key == pygame.K_6:
-                    self.cohesion_weight += 0.1
-                elif event.key == pygame.K_7:
-                    self.random_weight = max(0, self.random_weight - 0.05)
-                elif event.key == pygame.K_8:
-                    self.random_weight += 0.05
-                elif event.key == pygame.K_9:
-                    self.inertia_weight = max(0, self.inertia_weight - 0.1)
-                elif event.key == pygame.K_0:
-                    self.inertia_weight += 0.1
+                self._handle_keydown_event(event)
             
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:  # 左クリック
-                    # クリックした位置にメダカを追加
-                    x, y = event.pos
-                    return ("add_fish", x, y)
+                result = self._handle_mouse_event(event)
+                if result:
+                    return result
         
+        duration = time.time() - start_time
+        log_performance("Event handling", duration)
         return True
+    
+    def _handle_keydown_event(self, event):
+        """キーダウンイベントを処理"""
+        if event.key == pygame.K_ESCAPE:
+            self.logger.info("Escape key pressed")
+            log_world_event("ESCAPE", "Escape key pressed")
+            return False
+        elif event.key == pygame.K_i:
+            self.show_info = not self.show_info
+            self.logger.info(f"Info display toggled: {self.show_info}")
+            log_world_event("TOGGLE_INFO", f"Info display: {self.show_info}")
+        elif event.key == pygame.K_v:
+            self.show_vision = not self.show_vision
+            self.logger.info(f"Vision display toggled: {self.show_vision}")
+            log_world_event("TOGGLE_VISION", f"Vision display: {self.show_vision}")
+        elif event.key == pygame.K_1:
+            self.separation_weight = max(0, self.separation_weight - 0.1)
+            self.logger.info(f"Separation weight decreased to {self.separation_weight:.1f}")
+            log_world_event("PARAMETER_CHANGE", f"Separation weight: {self.separation_weight:.1f}")
+        elif event.key == pygame.K_2:
+            self.separation_weight += 0.1
+            self.logger.info(f"Separation weight increased to {self.separation_weight:.1f}")
+            log_world_event("PARAMETER_CHANGE", f"Separation weight: {self.separation_weight:.1f}")
+        elif event.key == pygame.K_3:
+            self.alignment_weight = max(0, self.alignment_weight - 0.1)
+            self.logger.info(f"Alignment weight decreased to {self.alignment_weight:.1f}")
+            log_world_event("PARAMETER_CHANGE", f"Alignment weight: {self.alignment_weight:.1f}")
+        elif event.key == pygame.K_4:
+            self.alignment_weight += 0.1
+            self.logger.info(f"Alignment weight increased to {self.alignment_weight:.1f}")
+            log_world_event("PARAMETER_CHANGE", f"Alignment weight: {self.alignment_weight:.1f}")
+        elif event.key == pygame.K_5:
+            self.cohesion_weight = max(0, self.cohesion_weight - 0.1)
+            self.logger.info(f"Cohesion weight decreased to {self.cohesion_weight:.1f}")
+            log_world_event("PARAMETER_CHANGE", f"Cohesion weight: {self.cohesion_weight:.1f}")
+        elif event.key == pygame.K_6:
+            self.cohesion_weight += 0.1
+            self.logger.info(f"Cohesion weight increased to {self.cohesion_weight:.1f}")
+            log_world_event("PARAMETER_CHANGE", f"Cohesion weight: {self.cohesion_weight:.1f}")
+        elif event.key == pygame.K_7:
+            self.random_weight = max(0, self.random_weight - 0.05)
+            self.logger.info(f"Random weight decreased to {self.random_weight:.2f}")
+            log_world_event("PARAMETER_CHANGE", f"Random weight: {self.random_weight:.2f}")
+        elif event.key == pygame.K_8:
+            self.random_weight += 0.05
+            self.logger.info(f"Random weight increased to {self.random_weight:.2f}")
+            log_world_event("PARAMETER_CHANGE", f"Random weight: {self.random_weight:.2f}")
+        elif event.key == pygame.K_9:
+            self.inertia_weight = max(0, self.inertia_weight - 0.1)
+            self.logger.info(f"Inertia weight decreased to {self.inertia_weight:.1f}")
+            log_world_event("PARAMETER_CHANGE", f"Inertia weight: {self.inertia_weight:.1f}")
+        elif event.key == pygame.K_0:
+            self.inertia_weight += 0.1
+            self.logger.info(f"Inertia weight increased to {self.inertia_weight:.1f}")
+            log_world_event("PARAMETER_CHANGE", f"Inertia weight: {self.inertia_weight:.1f}")
+    
+    def _handle_mouse_event(self, event):
+        """マウスイベントを処理"""
+        if event.button == 1:  # 左クリック
+            x, y = event.pos
+            self.logger.info(f"Mouse click at position ({x}, {y})")
+            log_world_event("MOUSE_CLICK", f"Position: ({x}, {y})")
+            return ("add_fish", x, y)
+        return None
     
     def draw_background(self):
         """背景を描画"""
+        start_time = time.time()
         self.screen.fill(self.background_color)
+        duration = time.time() - start_time
+        log_performance("Background drawing", duration)
     
     def draw_info(self, school):
         """情報を描画"""
         if not self.show_info:
             return
+        
+        start_time = time.time()
         
         # 基本情報
         info_lines = [
@@ -103,11 +177,16 @@ class World:
                 text_surface = self.font.render(line, True, WHITE)
                 self.screen.blit(text_surface, (10, y_offset))
             y_offset += 20
+        
+        duration = time.time() - start_time
+        log_performance("Info drawing", duration)
     
     def draw_vision_areas(self, school):
         """視界範囲を描画"""
         if not self.show_vision:
             return
+        
+        start_time = time.time()
         
         for fish in school.get_all_fish():
             vision_coords = fish.get_vision_area()
@@ -115,15 +194,38 @@ class World:
                 x, y = coord
                 # 視界範囲を小さな点で表示
                 pygame.draw.circle(self.screen, GREEN, (x, y), 2)
+        
+        duration = time.time() - start_time
+        log_performance("Vision areas drawing", duration)
     
     def draw_school_center(self, school):
         """群れの中心を描画"""
+        start_time = time.time()
+        
         center_x, center_y = school.get_school_center()
         pygame.draw.circle(self.screen, RED, (int(center_x), int(center_y)), 5)
+        
+        duration = time.time() - start_time
+        log_performance("School center drawing", duration)
     
     def update_display(self):
         """画面を更新"""
+        start_time = time.time()
         pygame.display.flip()
+        duration = time.time() - start_time
+        log_performance("Display update", duration)
+        
+        self.frame_count += 1
+        if self.frame_count % 60 == 0:  # 1秒ごと
+            self._log_performance_stats()
+    
+    def _log_performance_stats(self):
+        """パフォーマンス統計をログに記録"""
+        if self.start_time:
+            elapsed_time = time.time() - self.start_time
+            fps = self.get_fps()
+            self.logger.info(f"Performance: FPS={fps:.1f}, Frames={self.frame_count}, Elapsed={elapsed_time:.1f}s")
+            log_world_event("PERFORMANCE", f"FPS={fps:.1f}, Frames={self.frame_count}")
     
     def get_fps(self):
         """FPSを取得"""
@@ -135,6 +237,8 @@ class World:
     
     def quit(self):
         """pygameを終了"""
+        self.logger.info("Quitting pygame")
+        log_world_event("QUIT", "Pygame shutdown")
         pygame.quit()
     
     def get_parameters(self):
@@ -149,8 +253,34 @@ class World:
     
     def set_parameters(self, params):
         """パラメータを設定"""
+        old_params = self.get_parameters()
+        
         self.separation_weight = params.get('separation_weight', self.separation_weight)
         self.alignment_weight = params.get('alignment_weight', self.alignment_weight)
         self.cohesion_weight = params.get('cohesion_weight', self.cohesion_weight)
         self.random_weight = params.get('random_weight', self.random_weight)
         self.inertia_weight = params.get('inertia_weight', self.inertia_weight)
+        
+        self.logger.info(f"Parameters updated: {params}")
+        log_world_event("PARAMETERS_SET", f"New parameters: {params}")
+    
+    def get_world_statistics(self):
+        """世界の統計情報を取得"""
+        if self.start_time:
+            elapsed_time = time.time() - self.start_time
+        else:
+            elapsed_time = 0
+        
+        stats = {
+            'frame_count': self.frame_count,
+            'elapsed_time': elapsed_time,
+            'fps': self.get_fps(),
+            'parameters': self.get_parameters(),
+            'display_settings': {
+                'show_info': self.show_info,
+                'show_vision': self.show_vision
+            }
+        }
+        
+        self.logger.debug(f"World statistics: {stats}")
+        return stats

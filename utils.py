@@ -1,6 +1,41 @@
 import math
 import random
+import logging
+import time
 from constants import *
+
+# ログ設定
+def setup_logging():
+    """ログ設定を初期化"""
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler('fish_simulator.log', encoding='utf-8'),
+            logging.StreamHandler()
+        ]
+    )
+    return logging.getLogger('FishSimulator')
+
+def log_fish_behavior(fish_id, behavior_type, details):
+    """メダカの行動をログに記録"""
+    logger = logging.getLogger('FishSimulator.Fish')
+    logger.debug(f"Fish {fish_id}: {behavior_type} - {details}")
+
+def log_school_state(school_id, fish_count, density, center):
+    """群れの状態をログに記録"""
+    logger = logging.getLogger('FishSimulator.School')
+    logger.info(f"School {school_id}: Count={fish_count}, Density={density:.3f}, Center={center}")
+
+def log_world_event(event_type, details):
+    """世界イベントをログに記録"""
+    logger = logging.getLogger('FishSimulator.World')
+    logger.info(f"World Event: {event_type} - {details}")
+
+def log_performance(operation, duration):
+    """パフォーマンス情報をログに記録"""
+    logger = logging.getLogger('FishSimulator.Performance')
+    logger.debug(f"Performance: {operation} took {duration:.4f}s")
 
 def distance_between_points(x1, y1, x2, y2):
     """2点間の距離を計算"""

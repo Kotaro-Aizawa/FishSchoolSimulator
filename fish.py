@@ -1,7 +1,10 @@
 import random
 import math
 import numpy as np
+import logging
+import time
 from constants import *
+from utils import log_fish_behavior
 
 class Fish:
     def __init__(self, x, y, dx=0, dy=0):
@@ -12,9 +15,13 @@ class Fish:
         self.energy = 100
         self.age = 0
         self.gender = random.choice(['male', 'female'])
+        self.id = id(self)  # ユニークID
         
         # 方向を正規化
         self._normalize_direction()
+        
+        # ログ出力
+        log_fish_behavior(self.id, "CREATED", f"Position=({x}, {y}), Direction=({self.dx:.2f}, {self.dy:.2f}), Gender={self.gender}")
     
     def _normalize_direction(self):
         """方向ベクトルを正規化する"""
@@ -22,6 +29,7 @@ class Fish:
         if length > 0:
             self.dx /= length
             self.dy /= length
+            log_fish_behavior(self.id, "NORMALIZE", f"Direction normalized to ({self.dx:.2f}, {self.dy:.2f})")
     
     def get_position(self):
         """現在位置を返す"""
@@ -41,6 +49,7 @@ class Fish:
             self.dx = random.choice([-1, 0, 1])
             self.dy = random.choice([-1, 0, 1])
             self._normalize_direction()
+            log_fish_behavior(self.id, "RANDOM_DIRECTION", f"Set random direction to ({self.dx:.2f}, {self.dy:.2f})")
         
         # 前方
         front_x = int(self.x + self.dx * VISION_RANGE)
@@ -57,11 +66,13 @@ class Fish:
         right_y = int(self.y + (self.dy - self.dx) * VISION_RANGE)
         vision_coords.append((right_x, right_y))
         
+        log_fish_behavior(self.id, "VISION_AREA", f"Vision coords: {vision_coords}")
         return vision_coords
     
     def calculate_separation(self, nearby_fish):
         """分離行動を計算"""
         if not nearby_fish:
+            log_fish_behavior(self.id, "SEPARATION", "No nearby fish")
             return 0, 0
         
         separation_x = 0
@@ -79,21 +90,25 @@ class Fish:
                 separation_x += dx * force
                 separation_y += dy * force
         
+        log_fish_behavior(self.id, "SEPARATION", f"Force=({separation_x:.2f}, {separation_y:.2f}), Nearby={len(nearby_fish)}")
         return separation_x, separation_y
     
     def calculate_alignment(self, nearby_fish):
         """整列行動を計算"""
         if not nearby_fish:
+            log_fish_behavior(self.id, "ALIGNMENT", "No nearby fish")
             return 0, 0
         
         avg_dx = sum(fish.dx for fish in nearby_fish) / len(nearby_fish)
         avg_dy = sum(fish.dy for fish in nearby_fish) / len(nearby_fish)
         
+        log_fish_behavior(self.id, "ALIGNMENT", f"Average direction=({avg_dx:.2f}, {avg_dy:.2f}), Nearby={len(nearby_fish)}")
         return avg_dx, avg_dy
     
     def calculate_cohesion(self, nearby_fish):
         """結合行動を計算"""
         if not nearby_fish:
+            log_fish_behavior(self.id, "COHESION", "No nearby fish")
             return 0, 0
         
         # 群れの中心を計算
@@ -104,10 +119,13 @@ class Fish:
         cohesion_x = center_x - self.x
         cohesion_y = center_y - self.y
         
+        log_fish_behavior(self.id, "COHESION", f"Center=({center_x:.1f}, {center_y:.1f}), Force=({cohesion_x:.2f}, {cohesion_y:.2f})")
         return cohesion_x, cohesion_y
     
     def update(self, nearby_fish):
         """メダカの状態を更新"""
+        start_time = time.time()
+        
         # 群れ行動を計算
         sep_x, sep_y = self.calculate_separation(nearby_fish)
         align_x, align_y = self.calculate_alignment(nearby_fish)
@@ -132,17 +150,26 @@ class Fish:
             self.dx = new_dx / length
             self.dy = new_dy / length
         
+        # 移動前の位置を記録
+        old_x, old_y = self.x, self.y
+        
         # 移動
         self.x += self.dx * FISH_SPEED
         self.y += self.dy * FISH_SPEED
         
         # 境界処理（トーラス状の世界）
-        self.x = self.x % SCREEN_WIDTH
-        self.y = self.y % SCREEN_HEIGHT
+        if self.x < 0 or self.x >= SCREEN_WIDTH or self.y < 0 or self.y >= SCREEN_HEIGHT:
+            self.x = self.x % SCREEN_WIDTH
+            self.y = self.y % SCREEN_HEIGHT
+            log_fish_behavior(self.id, "BOUNDARY_WRAP", f"Wrapped from ({old_x:.1f}, {old_y:.1f}) to ({self.x:.1f}, {self.y:.1f})")
         
         # 年齢と体力の更新
         self.age += 1
         self.energy = max(0, self.energy - 0.1)
+        
+        # ログ出力
+        duration = time.time() - start_time
+        log_fish_behavior(self.id, "UPDATE", f"Position=({self.x:.1f}, {self.y:.1f}), Direction=({self.dx:.2f}, {self.dy:.2f}), Age={self.age}, Energy={self.energy:.1f}, Duration={duration:.4f}s")
     
     def draw(self, screen):
         """メダカを描画"""
