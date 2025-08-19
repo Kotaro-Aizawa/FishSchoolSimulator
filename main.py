@@ -52,6 +52,11 @@ def main():
                 school.add_fish(x, y)
                 print(f"メダカを追加しました: ({x}, {y})")
                 logger.info(f"Fish added at position ({x}, {y})")
+            elif isinstance(event_result, tuple) and event_result[0] == "reset_positions":
+                # メダカの位置をリセット
+                school.reset_fish_positions()
+                print(f"メダカの位置をリセットしました: {school.get_fish_count()}匹")
+                logger.info(f"Fish positions reset for {school.get_fish_count()} fish")
             
             # 群れの更新
             # Worldクラスから現在のパラメータを取得

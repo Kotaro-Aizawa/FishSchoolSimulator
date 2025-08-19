@@ -171,6 +171,27 @@ class School:
         else:
             self.logger.warning(f"Attempted to remove fish {fish.id} that is not in the school")
     
+    def reset_fish_positions(self):
+        """全てのメダカの位置をランダムに再配置"""
+        import time
+        start_time = time.time()
+        
+        for fish in self.fish_list:
+            # ランダムな位置に再配置
+            fish.x = random.randint(0, SCREEN_WIDTH - 1)
+            fish.y = random.randint(0, SCREEN_HEIGHT - 1)
+            # 方向もリセット
+            fish.dx = random.uniform(-1, 1)
+            fish.dy = random.uniform(-1, 1)
+            fish._normalize_direction()
+            
+            self.logger.debug(f"Reset fish {fish.id} to position ({fish.x}, {fish.y}) with direction ({fish.dx:.2f}, {fish.dy:.2f})")
+        
+        duration = time.time() - start_time
+        log_performance("Fish position reset", duration)
+        self.logger.info(f"Reset positions of all {self.fish_count} fish in {duration:.4f}s")
+        log_school_state(self.school_id, self.fish_count, self.get_school_density(), self.get_school_center())
+    
     def get_fish_count(self):
         """メダカの数を取得"""
         return self.fish_count

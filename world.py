@@ -68,7 +68,9 @@ class World:
                 return False
             
             elif event.type == pygame.KEYDOWN:
-                self._handle_keydown_event(event)
+                result = self._handle_keydown_event(event)
+                if result:
+                    return result
             
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 result = self._handle_mouse_event(event)
@@ -99,6 +101,11 @@ class World:
             self.show_center = not self.show_center
             self.logger.info(f"Center display toggled: {self.show_center}")
             log_world_event("TOGGLE_CENTER", f"Center display: {self.show_center}")
+        # メダカ配置リセット (P)
+        elif event.key == pygame.K_p:
+            self.logger.info("Fish position reset requested")
+            log_world_event("RESET_POSITIONS", "Fish position reset requested")
+            return ("reset_positions",)
         # 分離パラメータ (Q/W)
         elif event.key == pygame.K_q:
             self.separation_weight = max(0, self.separation_weight - 0.1)
@@ -215,6 +222,7 @@ class World:
             "I - Toggle Info",
             "V - Toggle Vision",
             "T - Toggle Center",
+            "P - Reset Positions",
             "R - Reset Parameters",
             "Mouse - Add Fish",
             "ESC - Quit"
