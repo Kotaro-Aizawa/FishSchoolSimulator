@@ -200,18 +200,53 @@ class World:
         log_performance("Info drawing", duration)
     
     def draw_vision_areas(self, school):
-        """視界範囲を描画"""
+        """視界範囲を描画（前方のマスをざっくり表示）"""
         if not self.show_vision:
             return
         
         start_time = time.time()
         
         for fish in school.get_all_fish():
-            vision_coords = fish.get_vision_area()
-            for coord in vision_coords:
-                x, y = coord
-                # 視界範囲を小さな点で表示
-                pygame.draw.circle(self.screen, GREEN, (x, y), 2)
+            fish_x, fish_y = fish.get_position()
+            dx, dy = fish.get_direction()
+            
+            # 方向を8方向に正規化
+            if abs(dx) > abs(dy):
+                direction_x = 1 if dx > 0 else -1
+                direction_y = 0
+            elif abs(dy) > abs(dx):
+                direction_x = 0
+                direction_y = 1 if dy > 0 else -1
+            else:
+                direction_x = 1 if dx > 0 else -1
+                direction_y = 1 if dy > 0 else -1
+            
+            # 前方のマスを小さな点で表示
+            for distance in range(1, min(VISION_RANGE, 20) + 1):  # 表示は20マスまでに制限
+                # 前方
+                check_x = fish_x + direction_x * distance
+                check_y = fish_y + direction_y * distance
+                pygame.draw.circle(self.screen, GREEN, (int(check_x), int(check_y)), 1)
+                
+                # 斜め前（左右）も表示
+                if direction_x != 0 and direction_y != 0:
+                    check_left_x = fish_x + direction_x * distance
+                    check_left_y = fish_y
+                    check_right_x = fish_x
+                    check_right_y = fish_y + direction_y * distance
+                elif direction_x != 0:
+                    check_left_x = fish_x + direction_x * distance
+                    check_left_y = fish_y - distance
+                    check_right_x = fish_x + direction_x * distance
+                    check_right_y = fish_y + distance
+                else:
+                    check_left_x = fish_x - distance
+                    check_left_y = fish_y + direction_y * distance
+                    check_right_x = fish_x + distance
+                    check_right_y = fish_y + direction_y * distance
+                
+                pygame.draw.circle(self.screen, GREEN, (int(check_left_x), int(check_left_y)), 1)
+                pygame.draw.circle(self.screen, GREEN, (int(check_right_x), int(check_right_y)), 1)
         
         duration = time.time() - start_time
         log_performance("Vision areas drawing", duration)

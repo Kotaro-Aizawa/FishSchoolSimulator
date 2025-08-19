@@ -58,16 +58,64 @@ class School:
         return nearby_fish
     
     def get_fish_in_vision(self, fish):
-        """メダカの視界範囲内のメダカを取得"""
+        """メダカの視界範囲内のメダカを取得（前方のマスをざっくり認識）"""
         start_time = time.time()
-        vision_coords = fish.get_vision_area()
         fish_in_vision = []
         
-        for other_fish in self.fish_list:
-            if other_fish != fish:
-                other_pos = other_fish.get_position()
-                if other_pos in vision_coords:
-                    fish_in_vision.append(other_fish)
+        # 魚の現在位置と方向を取得
+        fish_x, fish_y = fish.get_position()
+        dx, dy = fish.get_direction()
+        
+        # 方向を8方向に正規化（上下左右斜め）
+        if abs(dx) > abs(dy):
+            direction_x = 1 if dx > 0 else -1
+            direction_y = 0
+        elif abs(dy) > abs(dx):
+            direction_x = 0
+            direction_y = 1 if dy > 0 else -1
+        else:
+            direction_x = 1 if dx > 0 else -1
+            direction_y = 1 if dy > 0 else -1
+        
+        # 前方のマスをチェック（VISION_RANGE分）
+        for distance in range(1, VISION_RANGE + 1):
+            # 前方
+            check_x = fish_x + direction_x * distance
+            check_y = fish_y + direction_y * distance
+            
+            # 斜め前（左）
+            if direction_x != 0 and direction_y != 0:
+                check_left_x = fish_x + direction_x * distance
+                check_left_y = fish_y
+                check_right_x = fish_x
+                check_right_y = fish_y + direction_y * distance
+            elif direction_x != 0:  # 左右移動の場合
+                check_left_x = fish_x + direction_x * distance
+                check_left_y = fish_y - distance
+                check_right_x = fish_x + direction_x * distance
+                check_right_y = fish_y + distance
+            else:  # 上下移動の場合
+                check_left_x = fish_x - distance
+                check_left_y = fish_y + direction_y * distance
+                check_right_x = fish_x + distance
+                check_right_y = fish_y + direction_y * distance
+            
+            # 各チェック位置で他の魚を探す
+            check_positions = [
+                (check_x, check_y),
+                (check_left_x, check_left_y),
+                (check_right_x, check_right_y)
+            ]
+            
+            for other_fish in self.fish_list:
+                if other_fish != fish:
+                    other_x, other_y = other_fish.get_position()
+                    
+                    # チェック位置の近くにいるかを確認（グリッドサイズ考慮）
+                    for check_pos_x, check_pos_y in check_positions:
+                        if abs(other_x - check_pos_x) <= 10 and abs(other_y - check_pos_y) <= 10:
+                            if other_fish not in fish_in_vision:
+                                fish_in_vision.append(other_fish)
         
         duration = time.time() - start_time
         log_performance(f"Get fish in vision for {fish.id}", duration)
