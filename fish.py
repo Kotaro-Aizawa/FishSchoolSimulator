@@ -130,9 +130,20 @@ class Fish:
         log_fish_behavior(self.id, "COHESION", f"Center=({center_x:.1f}, {center_y:.1f}), Force=({cohesion_x:.2f}, {cohesion_y:.2f})")
         return cohesion_x, cohesion_y
     
-    def update(self, nearby_fish):
+    def update(self, nearby_fish, params=None):
         """メダカの状態を更新"""
         start_time = time.time()
+        
+        # パラメータを取得（デフォルト値を使用）
+        if params is None:
+            params = {
+                'separation_weight': SEPARATION_WEIGHT,
+                'alignment_weight': ALIGNMENT_WEIGHT,
+                'cohesion_weight': COHESION_WEIGHT,
+                'random_weight': RANDOM_WEIGHT,
+                'inertia_weight': INERTIA_WEIGHT,
+                'fish_speed': FISH_SPEED
+            }
         
         # 群れ行動を計算
         sep_x, sep_y = self.calculate_separation(nearby_fish)
@@ -140,17 +151,17 @@ class Fish:
         coh_x, coh_y = self.calculate_cohesion(nearby_fish)
         
         # 重み付けで合成
-        new_dx = (sep_x * SEPARATION_WEIGHT + 
-                 align_x * ALIGNMENT_WEIGHT + 
-                 coh_x * COHESION_WEIGHT + 
-                 random.uniform(-1, 1) * RANDOM_WEIGHT +
-                 self.dx * INERTIA_WEIGHT)
+        new_dx = (sep_x * params['separation_weight'] + 
+                 align_x * params['alignment_weight'] + 
+                 coh_x * params['cohesion_weight'] + 
+                 random.uniform(-1, 1) * params['random_weight'] +
+                 self.dx * params['inertia_weight'])
         
-        new_dy = (sep_y * SEPARATION_WEIGHT + 
-                 align_y * ALIGNMENT_WEIGHT + 
-                 coh_y * COHESION_WEIGHT + 
-                 random.uniform(-1, 1) * RANDOM_WEIGHT +
-                 self.dy * INERTIA_WEIGHT)
+        new_dy = (sep_y * params['separation_weight'] + 
+                 align_y * params['alignment_weight'] + 
+                 coh_y * params['cohesion_weight'] + 
+                 random.uniform(-1, 1) * params['random_weight'] +
+                 self.dy * params['inertia_weight'])
         
         # 方向を正規化
         length = math.sqrt(new_dx**2 + new_dy**2)
@@ -162,8 +173,8 @@ class Fish:
         old_x, old_y = self.x, self.y
         
         # 移動
-        self.x += self.dx * FISH_SPEED
-        self.y += self.dy * FISH_SPEED
+        self.x += self.dx * params['fish_speed']
+        self.y += self.dy * params['fish_speed']
         
         # 境界処理（トーラス状の世界）
         if self.x < 0 or self.x >= SCREEN_WIDTH or self.y < 0 or self.y >= SCREEN_HEIGHT:

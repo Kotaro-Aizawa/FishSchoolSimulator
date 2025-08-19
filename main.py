@@ -54,7 +54,17 @@ def main():
                 logger.info(f"Fish added at position ({x}, {y})")
             
             # 群れの更新
-            school.update_all_fish()
+            # Worldクラスから現在のパラメータを取得
+            params = {
+                'separation_weight': world.separation_weight,
+                'alignment_weight': world.alignment_weight,
+                'cohesion_weight': world.cohesion_weight,
+                'random_weight': world.random_weight,
+                'inertia_weight': world.inertia_weight,
+                'fish_speed': world.fish_speed,
+                'vision_range': world.vision_range
+            }
+            school.update_all_fish(params)
             
             # 描画
             world.draw_background()

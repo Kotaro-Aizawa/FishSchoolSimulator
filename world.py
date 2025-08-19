@@ -21,6 +21,8 @@ class World:
         self.cohesion_weight = COHESION_WEIGHT
         self.random_weight = RANDOM_WEIGHT
         self.inertia_weight = INERTIA_WEIGHT
+        self.fish_speed = FISH_SPEED
+        self.vision_range = VISION_RANGE
         
         # UI表示用
         self.show_info = True
@@ -136,6 +138,24 @@ class World:
             self.inertia_weight += 0.1
             self.logger.info(f"Inertia weight increased to {self.inertia_weight:.1f}")
             log_world_event("PARAMETER_CHANGE", f"Inertia weight: {self.inertia_weight:.1f}")
+        # メダカの速度 (G/H)
+        elif event.key == pygame.K_g:
+            self.fish_speed = max(0.1, self.fish_speed - 0.5)
+            self.logger.info(f"Fish speed decreased to {self.fish_speed:.1f}")
+            log_world_event("PARAMETER_CHANGE", f"Fish speed: {self.fish_speed:.1f}")
+        elif event.key == pygame.K_h:
+            self.fish_speed += 0.5
+            self.logger.info(f"Fish speed increased to {self.fish_speed:.1f}")
+            log_world_event("PARAMETER_CHANGE", f"Fish speed: {self.fish_speed:.1f}")
+        # 視界範囲 (J/K)
+        elif event.key == pygame.K_j:
+            self.vision_range = max(10, self.vision_range - 10)
+            self.logger.info(f"Vision range decreased to {self.vision_range}")
+            log_world_event("PARAMETER_CHANGE", f"Vision range: {self.vision_range}")
+        elif event.key == pygame.K_k:
+            self.vision_range += 10
+            self.logger.info(f"Vision range increased to {self.vision_range}")
+            log_world_event("PARAMETER_CHANGE", f"Vision range: {self.vision_range}")
         # リセット機能 (R)
         elif event.key == pygame.K_r:
             self.separation_weight = SEPARATION_WEIGHT
@@ -143,6 +163,8 @@ class World:
             self.cohesion_weight = COHESION_WEIGHT
             self.random_weight = RANDOM_WEIGHT
             self.inertia_weight = INERTIA_WEIGHT
+            self.fish_speed = FISH_SPEED
+            self.vision_range = VISION_RANGE
             self.logger.info("Parameters reset to default values")
             log_world_event("PARAMETER_RESET", "All parameters reset to default")
     
@@ -180,6 +202,8 @@ class World:
             f"Cohesion: {self.cohesion_weight:.1f} (Z/X)",
             f"Random: {self.random_weight:.2f} (C/B)",
             f"Inertia: {self.inertia_weight:.1f} (D/F)",
+            f"Speed: {self.fish_speed:.1f} (G/H)",
+            f"Vision: {self.vision_range} (J/K)",
             "",
             "Controls:",
             "I - Toggle Info",
@@ -222,7 +246,7 @@ class World:
                 direction_y = 1 if dy > 0 else -1
             
             # 前方のマスを小さな点で表示
-            for distance in range(1, min(VISION_RANGE, 20) + 1):  # 表示は20マスまでに制限
+            for distance in range(1, min(self.vision_range, 20) + 1):  # 表示は20マスまでに制限
                 # 前方
                 check_x = fish_x + direction_x * distance
                 check_y = fish_y + direction_y * distance

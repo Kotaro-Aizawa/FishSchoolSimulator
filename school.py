@@ -57,10 +57,14 @@ class School:
         
         return nearby_fish
     
-    def get_fish_in_vision(self, fish):
+    def get_fish_in_vision(self, fish, vision_range=None):
         """メダカの視界範囲内のメダカを取得（前方のマスをざっくり認識）"""
         start_time = time.time()
         fish_in_vision = []
+        
+        # 視界範囲を取得（デフォルトはVISION_RANGE）
+        if vision_range is None:
+            vision_range = VISION_RANGE
         
         # 魚の現在位置と方向を取得
         fish_x, fish_y = fish.get_position()
@@ -77,8 +81,8 @@ class School:
             direction_x = 1 if dx > 0 else -1
             direction_y = 1 if dy > 0 else -1
         
-        # 前方のマスをチェック（VISION_RANGE分）
-        for distance in range(1, VISION_RANGE + 1):
+        # 前方のマスをチェック（vision_range分）
+        for distance in range(1, vision_range + 1):
             # 前方
             check_x = fish_x + direction_x * distance
             check_y = fish_y + direction_y * distance
@@ -123,16 +127,17 @@ class School:
         
         return fish_in_vision
     
-    def update_all_fish(self):
+    def update_all_fish(self, params=None):
         """全てのメダカを更新"""
         start_time = time.time()
         
         for fish in self.fish_list:
             # 視界範囲内のメダカを取得
-            nearby_fish = self.get_fish_in_vision(fish)
+            vision_range = params.get('vision_range', VISION_RANGE) if params else VISION_RANGE
+            nearby_fish = self.get_fish_in_vision(fish, vision_range)
             
             # メダカを更新
-            fish.update(nearby_fish)
+            fish.update(nearby_fish, params)
         
         duration = time.time() - start_time
         log_performance("Update all fish", duration)
