@@ -90,46 +90,60 @@ class World:
             self.show_vision = not self.show_vision
             self.logger.info(f"Vision display toggled: {self.show_vision}")
             log_world_event("TOGGLE_VISION", f"Vision display: {self.show_vision}")
-        elif event.key == pygame.K_1:
+        # 分離パラメータ (Q/W)
+        elif event.key == pygame.K_q:
             self.separation_weight = max(0, self.separation_weight - 0.1)
             self.logger.info(f"Separation weight decreased to {self.separation_weight:.1f}")
             log_world_event("PARAMETER_CHANGE", f"Separation weight: {self.separation_weight:.1f}")
-        elif event.key == pygame.K_2:
+        elif event.key == pygame.K_w:
             self.separation_weight += 0.1
             self.logger.info(f"Separation weight increased to {self.separation_weight:.1f}")
             log_world_event("PARAMETER_CHANGE", f"Separation weight: {self.separation_weight:.1f}")
-        elif event.key == pygame.K_3:
+        # 整列パラメータ (A/S)
+        elif event.key == pygame.K_a:
             self.alignment_weight = max(0, self.alignment_weight - 0.1)
             self.logger.info(f"Alignment weight decreased to {self.alignment_weight:.1f}")
             log_world_event("PARAMETER_CHANGE", f"Alignment weight: {self.alignment_weight:.1f}")
-        elif event.key == pygame.K_4:
+        elif event.key == pygame.K_s:
             self.alignment_weight += 0.1
             self.logger.info(f"Alignment weight increased to {self.alignment_weight:.1f}")
             log_world_event("PARAMETER_CHANGE", f"Alignment weight: {self.alignment_weight:.1f}")
-        elif event.key == pygame.K_5:
+        # 結合パラメータ (Z/X)
+        elif event.key == pygame.K_z:
             self.cohesion_weight = max(0, self.cohesion_weight - 0.1)
             self.logger.info(f"Cohesion weight decreased to {self.cohesion_weight:.1f}")
             log_world_event("PARAMETER_CHANGE", f"Cohesion weight: {self.cohesion_weight:.1f}")
-        elif event.key == pygame.K_6:
+        elif event.key == pygame.K_x:
             self.cohesion_weight += 0.1
             self.logger.info(f"Cohesion weight increased to {self.cohesion_weight:.1f}")
             log_world_event("PARAMETER_CHANGE", f"Cohesion weight: {self.cohesion_weight:.1f}")
-        elif event.key == pygame.K_7:
+        # ランダムパラメータ (C/V)
+        elif event.key == pygame.K_c:
             self.random_weight = max(0, self.random_weight - 0.05)
             self.logger.info(f"Random weight decreased to {self.random_weight:.2f}")
             log_world_event("PARAMETER_CHANGE", f"Random weight: {self.random_weight:.2f}")
-        elif event.key == pygame.K_8:
+        elif event.key == pygame.K_v:
             self.random_weight += 0.05
             self.logger.info(f"Random weight increased to {self.random_weight:.2f}")
             log_world_event("PARAMETER_CHANGE", f"Random weight: {self.random_weight:.2f}")
-        elif event.key == pygame.K_9:
+        # 慣性パラメータ (D/F)
+        elif event.key == pygame.K_d:
             self.inertia_weight = max(0, self.inertia_weight - 0.1)
             self.logger.info(f"Inertia weight decreased to {self.inertia_weight:.1f}")
             log_world_event("PARAMETER_CHANGE", f"Inertia weight: {self.inertia_weight:.1f}")
-        elif event.key == pygame.K_0:
+        elif event.key == pygame.K_f:
             self.inertia_weight += 0.1
             self.logger.info(f"Inertia weight increased to {self.inertia_weight:.1f}")
             log_world_event("PARAMETER_CHANGE", f"Inertia weight: {self.inertia_weight:.1f}")
+        # リセット機能 (R)
+        elif event.key == pygame.K_r:
+            self.separation_weight = SEPARATION_WEIGHT
+            self.alignment_weight = ALIGNMENT_WEIGHT
+            self.cohesion_weight = COHESION_WEIGHT
+            self.random_weight = RANDOM_WEIGHT
+            self.inertia_weight = INERTIA_WEIGHT
+            self.logger.info("Parameters reset to default values")
+            log_world_event("PARAMETER_RESET", "All parameters reset to default")
     
     def _handle_mouse_event(self, event):
         """マウスイベントを処理"""
@@ -158,15 +172,18 @@ class World:
         info_lines = [
             f"Fish Count: {school.get_fish_count()}",
             f"School Density: {school.get_school_density():.3f}",
-            f"Separation: {self.separation_weight:.1f} (1/2)",
-            f"Alignment: {self.alignment_weight:.1f} (3/4)",
-            f"Cohesion: {self.cohesion_weight:.1f} (5/6)",
-            f"Random: {self.random_weight:.2f} (7/8)",
-            f"Inertia: {self.inertia_weight:.1f} (9/0)",
+            "",
+            "Parameters:",
+            f"Separation: {self.separation_weight:.1f} (Q/W)",
+            f"Alignment: {self.alignment_weight:.1f} (A/S)",
+            f"Cohesion: {self.cohesion_weight:.1f} (Z/X)",
+            f"Random: {self.random_weight:.2f} (C/V)",
+            f"Inertia: {self.inertia_weight:.1f} (D/F)",
             "",
             "Controls:",
             "I - Toggle Info",
             "V - Toggle Vision",
+            "R - Reset Parameters",
             "Mouse - Add Fish",
             "ESC - Quit"
         ]
