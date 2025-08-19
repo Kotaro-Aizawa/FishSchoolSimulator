@@ -5,7 +5,7 @@ FPS = 60
 
 # メダカ設定
 DEFAULT_FISH_COUNT = 100
-FISH_SIZE = 4
+FISH_SIZE = 8  # サイズを2倍に
 FISH_SPEED = 1
 
 # 視界設定
