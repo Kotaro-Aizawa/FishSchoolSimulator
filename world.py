@@ -27,6 +27,7 @@ class World:
         # UI表示用
         self.show_info = True
         self.show_vision = False
+        self.show_center = True
         
         # 統計情報
         self.frame_count = 0
@@ -93,6 +94,11 @@ class World:
             self.show_vision = not self.show_vision
             self.logger.info(f"Vision display toggled: {self.show_vision}")
             log_world_event("TOGGLE_VISION", f"Vision display: {self.show_vision}")
+        # 群れの中心表示切り替え (T)
+        elif event.key == pygame.K_t:
+            self.show_center = not self.show_center
+            self.logger.info(f"Center display toggled: {self.show_center}")
+            log_world_event("TOGGLE_CENTER", f"Center display: {self.show_center}")
         # 分離パラメータ (Q/W)
         elif event.key == pygame.K_q:
             self.separation_weight = max(0, self.separation_weight - 0.1)
@@ -208,6 +214,7 @@ class World:
             "Controls:",
             "I - Toggle Info",
             "V - Toggle Vision",
+            "T - Toggle Center",
             "R - Reset Parameters",
             "Mouse - Add Fish",
             "ESC - Quit"
@@ -277,6 +284,9 @@ class World:
     
     def draw_school_center(self, school):
         """群れの中心を描画"""
+        if not self.show_center:
+            return
+        
         start_time = time.time()
         
         center_x, center_y = school.get_school_center()
